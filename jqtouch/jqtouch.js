@@ -37,7 +37,7 @@
             hist=[],
             newPageCount=0,
             jQTSettings={},
-	        hashCheckInterval,
+            hashCheckInterval,
             currentPage,
             orientation,
             isMobileWebKit = RegExp(" Mobile/").test(navigator.userAgent),
@@ -110,6 +110,11 @@
             if (hairextensions) {
                 $head.prepend(hairextensions);
             }
+
+            // This event is later than jQuery's $( document ).ready
+            // Later is better, since iPhone won't hide until
+            // the progress bar has not to be shown any more.
+            window.addEventListener( 'load', hideUrlBar, false );
 
             // Initialize on document ready:
             $(document).ready(function() {
@@ -188,7 +193,6 @@
                 $(currentPage).addClass('current');
                 location.hash = '#' + $(currentPage).attr('id');
                 addPageToHistory(currentPage);
-                scrollTo(0, 0);
                 startHashCheck();
             });
         }
@@ -341,7 +345,7 @@
             $(':focus').blur();
 
             // Make sure we are scrolled up to hide location bar
-            scrollTo(0, 0);
+            hideUrlBar();
 
             // Define callback to run after animation completes
             var callback = function animationEnd(event) {
@@ -412,7 +416,7 @@
                     $node.attr('id', 'page-' + (++newPageCount));
                 }
 
-		        $body.trigger('pageInserted', {page: $node.appendTo($body)});
+                $body.trigger('pageInserted', {page: $node.appendTo($body)});
 
                 if ($node.hasClass('current') || !targetPage) {
                     targetPage = $node;
@@ -500,22 +504,22 @@
         function updateOrientation() {
             orientation = window.innerWidth < window.innerHeight ? 'profile' : 'landscape';
             $body.removeClass('profile landscape').addClass(orientation).trigger('turn', {orientation: orientation});
-            // scrollTo(0, 0);
+            hideUrlBar();
         }
         function handleTouch(e) {
             var $el = $(e.target);
-            
+
             // Only handle touchSelectors
             if (!$(e.target).is(touchSelectors.join(', '))) {
                 var $link = $(e.target).closest('a, area');
-                
+
                 if ($link.length && $link.is(touchSelectors.join(', '))) {
                     $el = $link;
                 } else {
                     return;
                 }
             }
-            
+
             if (e) {
                 var hoverTimeout = null,
                     startX = event.changedTouches[0].clientX,
@@ -549,7 +553,7 @@
                 }
 
                 clearTimeout(hoverTimeout);
-            } 
+            }
 
             function touchend() {
                 updateChanges();
@@ -572,6 +576,17 @@
             }
 
         } // End touch handler
+
+        /**
+         * Hides the URL bar.
+         * Is deferred, so the browser gets a chance to finish loading first.
+         * Has to be attached to the public interface, to allow users to hide later.
+         * (e.g. after an additional ajax call, which prolongs the progress bar
+         * and therefore inhibits hiding)
+         */
+        function hideUrlBar() {
+            window.setTimeout( function() { window.scrollTo( 0, 1 ); }, 0 );
+        }
 
         // Public jQuery Fns
         $.fn.unselect = function(obj) {
@@ -609,7 +624,8 @@
             goBack: goBack,
             goTo: goTo,
             addAnimation: addAnimation,
-            submitForm: submitForm
+            submitForm: submitForm,
+            hideUrlBar: hideUrlBar
         }
 
         return publicObj;
