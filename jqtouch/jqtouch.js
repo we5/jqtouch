@@ -114,7 +114,7 @@
             // This event is later than jQuery's $( document ).ready
             // Later is better, since iPhone won't hide until
             // the progress bar has not to be shown any more.
-            window.addEventListener( 'load', hideUrlBar, false );
+            $( window ).bind( 'load', hideUrlBar );
 
             // Initialize on document ready:
             $(document).ready(function() {
