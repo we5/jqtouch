@@ -150,11 +150,17 @@
                     $body.addClass(jQTSettings.fullScreenClass + ' ' + jQTSettings.statusBar);
                 }
 
+                // Fixed orientation change detection to get it working on Android devices as adviced in:
+                // http://stackoverflow.com/questions/1649086/detect-rotation-of-android-phone-in-the-browser-with-javascript
+                var orientationChange = 'onorientationchange' in window ? 'orientationchange' : 'resize';
+
+                $( window )
+                    .bind( orientationChange, updateOrientation )
+                    .trigger( orientationChange );
+
                 // Create custom live events
                 $body
                     .bind('touchstart', handleTouch)
-                    .bind('orientationchange', updateOrientation)
-                    .trigger('orientationchange')
                     .submit(submitForm);
 
                 if (jQTSettings.useFastTouch && $.support.touch) {
